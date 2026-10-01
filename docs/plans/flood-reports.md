@@ -29,14 +29,14 @@
 
 ### ส่วนที่ 1: Tracer bullet (ขั้น 1–3)
 
-**1. `ReportStore` แบบบางที่สุด**
+**[x] 1. `ReportStore` แบบบางที่สุด**
 - ไฟล์: **ใหม่** `src/reports.ts` มี type `Report`, `ReportStore.add(input, now)` และ `ReportStore.listFor(districtId)` / **ใหม่** `tests/reports.test.ts`
 - ยังไม่มี validation ไม่มี severity ไม่มีการหมดอายุ
 - test ที่เขียนก่อน
   - เพิ่มรายงานแล้ว `add` คืน `id` ที่ไม่ว่าง และเพิ่มสองครั้งได้ `id` ไม่ซ้ำกัน (RPT-REQ-001 AC3)
   - `listFor("lat-phrao")` ไม่มีรายงานของเขตอื่นปนมา (RPT-REQ-008 AC4)
 
-**2. เพิ่ม route `POST /reports` และ field `reports` ใน `GET /districts/:id`**
+**[x] 2. เพิ่ม route `POST /reports` และ field `reports` ใน `GET /districts/:id`**
 - ไฟล์: `src/app.ts` ขยาย `Context` ให้มี `reports?: ReportStore` เพิ่ม route และเพิ่ม `reports` กับ `reportsNotice` / `tests/app.test.ts` เพิ่ม `describe` ใหม่
 - test ที่เขียนก่อน
   - body ที่ถูกต้องได้ `201` พร้อม `notice`, `seenAt` และ `expiresAt` เป็นเวลากรุงเทพฯ (RPT-REQ-001 AC1, AC2 และ RPT-REQ-013 AC1 เฉพาะ 201)

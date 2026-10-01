@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { handle, NOTICE } from "../src/app.ts"
+import { ReportStore } from "../src/reports.ts"
 
 const now = new Date("2026-09-30T12:30:00Z")
 
@@ -40,5 +41,63 @@ describe("GET /districts/:id", () => {
 describe("unknown routes", () => {
   it("returns 404", () => {
     expect(handle("GET", "/nope", undefined, { now }).status).toBe(404)
+  })
+})
+
+const validReport = {
+  districtId: "lat-phrao",
+  landmark: "ปากซอยลาดพร้าว 71",
+  depthCm: 35,
+  seenAt: "2026-09-30T12:00:00Z"
+}
+
+const REPORTS_NOTICE = "รายงานจากประชาชน ยังไม่ได้ตรวจสอบ ไม่ใช่ประกาศเตือนภัยทางการ"
+
+describe("POST /reports", () => {
+  it("accepts a valid report and answers 201 with Bangkok times", () => {
+    const res = handle("POST", "/reports", validReport, { now, reports: new ReportStore() })
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({
+      notice: NOTICE,
+      report: {
+        districtId: "lat-phrao",
+        landmark: "ปากซอยลาดพร้าว 71",
+        depthCm: 35,
+        seenAt: "2026-09-30T19:00:00+07:00",
+        expiresAt: "2026-09-30T22:00:00+07:00"
+      }
+    })
+  })
+})
+
+describe("GET /districts/:id reports", () => {
+  it("shows a submitted report in its district", () => {
+    const reports = new ReportStore()
+    handle("POST", "/reports", validReport, { now, reports })
+
+    const res = handle("GET", "/districts/lat-phrao", undefined, { now, reports })
+
+    expect(res.body).toMatchObject({
+      reports: [
+        {
+          landmark: "ปากซอยลาดพร้าว 71",
+          depthCm: 35,
+          seenAt: "2026-09-30T19:00:00+07:00",
+          expiresAt: "2026-09-30T22:00:00+07:00",
+          minutesAgo: 30,
+          source: "user-reported"
+        }
+      ]
+    })
+  })
+
+  it("always carries reportsNotice, with an empty list when there are no reports", () => {
+    const res = handle("GET", "/districts/lat-phrao", undefined, { now, reports: new ReportStore() })
+    expect(res.body).toMatchObject({ reportsNotice: REPORTS_NOTICE, reports: [] })
+  })
+
+  it("still works when no store is passed in", () => {
+    const res = handle("GET", "/districts/lat-phrao", undefined, { now })
+    expect(res.body).toMatchObject({ reportsNotice: REPORTS_NOTICE, reports: [] })
   })
 })
